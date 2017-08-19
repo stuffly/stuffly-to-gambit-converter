@@ -1,0 +1,1 @@
+# Stuffly to Gambit Converter

@@ -1,34 +1,53 @@
-﻿open System.IO
+﻿// Let's clarify the terminology.
+// The folder that has to be converted is called Stuffly Folder.
+// Every non-empty textual file in it is called Stuffly File.
+// Every line in a Stuffly File is called Stuffly Item.
+// Stuffly Item can have two Parts separated by a vertical line (|).
+// Parts are called Left Part and Right Part.
+// Once parsed, a Stuffly File is called Stuffly Document.
+// Each Stuffly File is converted to a Gambit Deck.
+// Each Stuffly Item in the file is converted to a Card within the Deck.
+// Each Card has Front Page Side and a Back Page Side.
+// The left part of a Stuffly Item is mapped to the Back Page Side.
+// The right part of a Stuffly Item is mapped to the Front Page Side.
 
-let getStufflyFiles workingDirectory =
-    (new DirectoryInfo(workingDirectory)).EnumerateFiles("*.txt", SearchOption.AllDirectories)
-        |> Seq.where (fun file -> file.Length > 10L)
+open System.IO
+
+let getStufflyFolder argv =
+    match argv with
+        | [] -> Directory.GetCurrentDirectory()
+        | [directory] -> directory
+        | _ -> argv.Item 0
+
+let getStufflyFilesWithin stufflyFolder =
+    (new DirectoryInfo(stufflyFolder)).EnumerateFiles("*.txt", SearchOption.AllDirectories)
+        |> Seq.where (fun file -> file.Length > 3L) // Ignore empty files and files with with only the UTF8 BOM marker inside.
         |> Seq.map (fun file -> file.FullName)
 
-let readStufflyDocumentFromFile filePath =
+let readStufflyFile stufflyFilePath =
     (
-        Path.GetFileNameWithoutExtension(filePath),
-        File.ReadAllLines(filePath) |> Array.toList
+        Path.GetFileNameWithoutExtension(stufflyFilePath),
+        File.ReadAllLines(stufflyFilePath) |> Array.toList
     )
 
 open System
 open System.Text.RegularExpressions
 
 let parseStufflyItem (item : String) =
-    let sides = item.Split('|') |> Array.toList
-    match sides with
+    let parts = item.Split('|') |> Array.toList
+    match parts with
         | [] -> ("", "")
-        | first::rest ->             
-            let backPage = Regex.Replace(first, "^\d\d\d\d\.\d\d\.\d\d\ ", "")
-            (String.Join("|", rest), backPage)
+        | head::tail ->             
+            let leftPart = Regex.Replace(head, "^\d\d\d\d\.\d\d\.\d\d\ ", "")
+            (leftPart, String.Join("|", tail))
 
 
-let parseStufflyDocument (documentName : String, documentContent) =
+let parseStufflyFile (stufflyFileName : String, stufflyFileContent) =
     let parsedDocument =
-        documentContent
+        stufflyFileContent
             |> List.map (fun stufflyItem -> parseStufflyItem stufflyItem)
-            |> List.where (fun sides -> snd sides <> "" )
-    (documentName, parsedDocument)
+            |> List.where (fun parts -> parts <> ("", "") )
+    (stufflyFileName, parsedDocument)
 
 
 open FSharp.Data.Sql
@@ -48,67 +67,59 @@ type GambitDatabase = SqlDataProvider<
                             UseOptionTypes = true>
 
 
-let createOutputDatabase workingDirectory =
-    let outputDatabaseFileName = Path.Combine(workingDirectory, "Output.db")
+let createOutputDatabaseWithin stufflyFolder =    
+    let outputDatabaseFileName = Path.Combine(stufflyFolder, "Output.db")
     if File.Exists(outputDatabaseFileName) then
         File.Delete(outputDatabaseFileName)
 
     File.Copy(Path.Combine(Path.GetDirectoryName(Assembly.GetEntryAssembly().Location), "GambitDatabase.db"), outputDatabaseFileName)
-    ()
+
+    sprintf "Data Source=%s;Version=3" outputDatabaseFileName
 
 
-let createNewDeck (database : GambitDatabase.dataContext) (documentName, cards) =
+let createDeck (database : GambitDatabase.dataContext) (documentName, parts) =
     let newDeck = database.Main.Decks.Create()
     newDeck.Title <- documentName
     newDeck.CurrentCardIndex <- 0
-    (newDeck, cards)
+    (newDeck, parts)
 
 
-let createDeckCards (database : GambitDatabase.dataContext) (deckId, cards) =
-    let createNewCard (database : GambitDatabase.dataContext) deckId (front, back) =
+let createDeckCards (database : GambitDatabase.dataContext) (deckId, parts) =
+    let createNewCard (database : GambitDatabase.dataContext) index deckId (left, right) =
         let newCard = database.Main.Cards.Create()
         newCard.DeckId <- deckId
-        newCard.FrontPageSide <- front
-        newCard.BackPageSide <- back
-        newCard.OrderIndex <- 0
+        newCard.FrontPageSide <- right
+        newCard.BackPageSide <- left
+        newCard.OrderIndex <- index
         ()
 
-    cards |> List.iter (fun card -> createNewCard database deckId card)
-
-let getWorkingDirectory argv =
-    match argv with
-        | [] -> Directory.GetCurrentDirectory()
-        | [directory] -> directory
-        | _ -> argv.Item 0
+    parts |> List.iteri (fun index part -> createNewCard database index deckId part)
 
 [<EntryPoint>]
 let main argv = 
 
-    let workingDirectory = getWorkingDirectory (Array.toList argv)
+    let stufflyFolder = getStufflyFolder (Array.toList argv)
     
-    let stufflyFiles = getStufflyFiles workingDirectory
+    let stufflyDocuments = 
+        getStufflyFilesWithin stufflyFolder
+            |> Seq.map readStufflyFile
+            |> Seq.map parseStufflyFile
 
-    let parsedStufflyDocuments = 
-        stufflyFiles
-            |> Seq.map readStufflyDocumentFromFile
-            |> Seq.map parseStufflyDocument
+    let outputDatabaseConnectionString = createOutputDatabaseWithin stufflyFolder
 
-    createOutputDatabase workingDirectory
-
-    let database = GambitDatabase.GetDataContext( sprintf "Data Source=%s;Version=3" (Path.Combine(workingDirectory, "Output.db")) )
+    let database = GambitDatabase.GetDataContext(outputDatabaseConnectionString)
 
     let decks =
-        parsedStufflyDocuments
-            |> Seq.map (fun document -> createNewDeck database document)
+        stufflyDocuments
+            |> Seq.map (fun document -> createDeck database document)
             |> Seq.toList // We need the list here in order not to reenumerate the sequence below when we create cards.
 
-    // We have to save the decks so that they get the IDs updated before we create
-    // their cards.
+    // We have to save the decks so that they get the IDs updated before we create their cards.
     database.SubmitUpdates()
 
     decks
         |> List.map (fun deck -> ((fst deck).Id, snd deck))
-        |> List.iter (fun deck -> createDeckCards database deck)
+        |> List.iter (fun deckIdAndParts -> createDeckCards database deckIdAndParts)
 
     database.SubmitUpdates()
 

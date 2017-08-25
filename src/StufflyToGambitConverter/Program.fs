@@ -37,7 +37,7 @@ open System.Reflection
 // SalDataProvider type provider plays well with the SQLite NuGet package. For more info see the below links:
 //      http://blog.wezeku.com/2016/12/17/f-sqlprovider-and-sqlite-now-work-better-together/
 //      https://system.data.sqlite.org/index.html/tktview/d4728aecb76adffb227e1bfd5350e81f3cbee7a7
-let [<Literal>] resolutionPath = __SOURCE_DIRECTORY__ + @"..\packages\System.Data.SQLite.Core.1.0.105.2\lib\net46"
+let [<Literal>] resolutionPath = __SOURCE_DIRECTORY__ + @"..\..\packages\System.Data.SQLite.Core.1.0.105.2\lib\net46"
 let [<Literal>] connectionString = "Data Source=" + __SOURCE_DIRECTORY__ + @"\GambitDatabase.db;Version=3"
 
 type GambitDatabase = SqlDataProvider< 

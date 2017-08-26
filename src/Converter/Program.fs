@@ -21,7 +21,6 @@ let getStufflyFolder argv =
 
 let getStufflyFilesWithin stufflyFolder =
     (new DirectoryInfo(stufflyFolder)).EnumerateFiles("*.txt", SearchOption.AllDirectories)
-        |> Seq.where (fun file -> file.Length > 3L) // Ignore empty files and files with with only the UTF8 BOM marker inside.
         |> Seq.map (fun file -> file.FullName)
 
 let readStufflyFile stufflyFilePath =
@@ -33,16 +32,58 @@ let readStufflyFile stufflyFilePath =
 open System
 open System.Text.RegularExpressions
 
-let parseStufflyItem (item : String) =
-    let parts = item.Split('|') |> Array.toList
-    match parts with
-        | [] -> ("", "")
-        | head::tail ->             
-            let leftPart = Regex.Replace(head, "^\d\d\d\d\.\d\d\.\d\d\ ", "")
-            (leftPart, String.Join("|", tail))
+let parseStufflyFile (stufflyFileName : string, stufflyFileContent) =
+    let parseStufflyItem (item : string) =
 
+        let removeDate (leftPart, rightPart) =
+            (Regex.Replace(leftPart, @"^\d\d\d\d\.\d\d\.\d\d", ""), rightPart)
 
-let parseStufflyFile (stufflyFileName : String, stufflyFileContent) =
+        let removeTags (leftPart, rightPart) =
+            (Regex.Replace(leftPart, "\s#[\w-]+", ""), rightPart)
+
+        let removeSources (leftPart, rightPart) =
+            (Regex.Replace(leftPart, "\s@[\w-]+", ""), rightPart)
+
+        let trimParts (leftPart : string, rightPart : string) =
+            (leftPart.Trim(), rightPart.Trim())
+
+        let createRightPartIfEmpty (leftPart, rightPart) =
+            let shuffle =
+                let random = new Random()
+
+                let rec innerShuffle (text : string) =
+                    let shuffledWords =
+                        text.Split(' ')
+                            |> Array.map (fun word -> (random.Next(), word))
+                            |> Array.sortBy (fun (index, word) -> index)
+                            |> Array.map (fun (index, word) -> word)
+                    if shuffledWords.Length = 1 // If the left part has just a single word...
+                    then
+                        text // ... then we have to return that word.
+                    else
+                        let shuffledText = String.Join(" ", shuffledWords)
+                        if shuffledText <> text then shuffledText else innerShuffle text
+
+                innerShuffle
+
+            match trimParts (leftPart, rightPart) with
+                | ("", "") -> (leftPart, rightPart)
+                | (_, "") -> (leftPart, sprintf "<<%s>>" (shuffle leftPart))
+                | _ -> (leftPart, rightPart)
+
+        let parts =
+            match (item.Split('|') |> Array.toList) with
+                | [] -> ("", "")
+                | [head] -> (head, "")
+                | head::tail -> (head, String.Join("|", tail))
+
+        parts
+            |> removeDate
+            |> removeTags
+            |> removeSources
+            |> createRightPartIfEmpty
+            |> trimParts
+
     let parsedDocument =
         stufflyFileContent
             |> List.map (fun stufflyItem -> parseStufflyItem stufflyItem)
@@ -104,6 +145,7 @@ let main argv =
         getStufflyFilesWithin stufflyFolder
             |> Seq.map readStufflyFile
             |> Seq.map parseStufflyFile
+            |> Seq.where (fun (documentName, documentContent) -> documentContent <> [])
 
     let outputDatabaseConnectionString = createOutputDatabaseWithin stufflyFolder
 

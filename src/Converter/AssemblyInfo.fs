@@ -5,9 +5,9 @@ open System.Runtime.CompilerServices
 open System.Runtime.InteropServices
 
 [<assembly: AssemblyTitle("Stuffly To Gambit Converter")>]
-[<assembly: AssemblyDescription("Converts a folder with Stuffly files to a Gambit SQLLight database.")>]
+[<assembly: AssemblyDescription("Stuffly to Gambit Converter convertes Stuffly Folders to an SQLite database compatible with Gambit Flashcards version 1.2.0.")>]
 [<assembly: AssemblyProduct("Stuffly To Gambit Converter")>]
-[<assembly: AssemblyCopyright("Copyright © Igor Rončević, 2017")>]
+[<assembly: AssemblyCopyright("Copyright © 2017 Igor Rončević")>]
 [<assembly: AssemblyCulture("")>]
 
 [<assembly: ComVisible(false)>]

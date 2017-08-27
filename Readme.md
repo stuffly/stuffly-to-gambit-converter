@@ -1,17 +1,20 @@
 # Stuffly to Gambit Converter
 
-Stuffly Folders to [Gambit Flashcards](https://play.google.com/store/apps/details?id=ru.ming13.gambit) converter.
+Converts Stuffly Folders to [Gambit Flashcards](https://play.google.com/store/apps/details?id=ru.ming13.gambit) Decks and Cards.
 
 [![Build status](https://ci.appveyor.com/api/projects/status/etrgjgh3q5u3eqpy?svg=true)](https://ci.appveyor.com/project/ironcev/stuffly-to-gambit-converter)
+[![Test status](http://teststatusbadge.azurewebsites.net/api/status/ironcev/stuffly-to-gambit-converter)](https://ci.appveyor.com/project/ironcev/stuffly-to-gambit-converter)
 
 ## About
-*Stuffly to Gambit Converter* convertes Stuffly Folders to an SQLite database compatible with [Gambit Flashcards](https://play.google.com/store/apps/details?id=ru.ming13.gambit) version 1.2.0. Each Stuffly File will be converted to a Gambit Deck.
+*Stuffly to Gambit Converter* convertes Stuffly Folders to an SQLite database compatible with [Gambit Flashcards](https://play.google.com/store/apps/details?id=ru.ming13.gambit) version 1.2.0.
 
-![Gambit Flashcards Decks](doc/gambit-flashcards-decks.jpg)
+Each Stuffly File is converted into a Gambit Deck.
 
-Each line in the Stuffly File will be converted to a single Card within the deck.
+![Gambit Flashcards Decks](doc/converting-stuffly-files-to-gambit-flashcards-decks.jpg)
 
-![Gambit Flashcards Cards](doc/gambit-flashcards-cards.jpg)
+Each line in the Stuffly File (Stuffly Item) is converted into a single Card within the Deck.
+
+![Gambit Flashcards Cards](doc/converting-stuffly-items-to-gambit-flashcards-cards.jpg)
 
 ## Usage
 If the *Stuffly to gambit Converter* is registered in your PATH system variable just run it within your Stuffly Folder:
@@ -24,10 +27,10 @@ Otherwise, run the converter out of its folder and provide the Stuffly Folder as
 
 **NOTE: The path to the Stuffly Folder must not end with backspace.**
 
-The converter will create the file called *Output.db* that can be imported into [Gambit Flashcards](https://play.google.com/store/apps/details?id=ru.ming13.gambit).
+The converter will create a file called *Output.db* that can be imported into the [Gambit Flashcards](https://play.google.com/store/apps/details?id=ru.ming13.gambit).
 
 ## Known Limitations
-Current version is 0.1.0 and thus very limited in functionality. Here are the main known limitations:
+Current version is 0.2.0 and thus very limited in functionality. Here are the main known limitations:
 
 - The Stuffly Folder must not contain two or more Stuffly Files with the same name.
 - All the Stuffly Files within the Stuffly Folder will be converted. It is not possible to convert specific Stuffly Files or to exclude certain files.

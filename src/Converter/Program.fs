@@ -53,7 +53,7 @@ let parseStufflyFile (stufflyFileName : string, stufflyFileContent) =
 
                 let rec innerShuffle (text : string) =
                     let shuffledWords =
-                        text.Split(' ')
+                        text.Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
                             |> Array.map (fun word -> (random.Next(), word))
                             |> Array.sortBy (fun (index, word) -> index)
                             |> Array.map (fun (index, word) -> word)

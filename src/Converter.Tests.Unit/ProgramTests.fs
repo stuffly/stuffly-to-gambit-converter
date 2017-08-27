@@ -1,5 +1,6 @@
 ﻿module StufflyToGambitConverter.Converter.Tests.Unit
 
+open System
 open Program
 open NUnit.Framework
 open FsUnit
@@ -76,15 +77,36 @@ type ProgramTests() =
         rightSide |> should startWith "<<"
         rightSide |> should endWith ">>"
         rightSide.TrimStart('<').TrimEnd('>') |> should not' (equal "this is some simple text") 
-        "this is some simple text".Split(' ')
+        "this is some simple text".Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
             |> Array.iter (fun word -> rightSide |> should haveSubstring word)
 
     [<Test>]
     member this.``parseStufflyFile properly parses common real-life examples``() =
+        let isShuffledVersionOf (original : string ) (shuffled : string) =
+            let trimmedShuffled = shuffled.TrimStart('<').TrimEnd('>')
+            original.Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
+                |> Array.forall (fun word -> trimmedShuffled.Contains(word))
+
         parseSingleLineStufflyFile "2015.09.18 -r Richtungswechsel,-|the change of direction" |> should equal [("-r Richtungswechsel,-", "the change of direction")]
+
         fst (parseSingleLineStufflyFile "2017.08.22 es ist mehr im Weg als es hilft").Head |> should equal "es ist mehr im Weg als es hilft"
+        isShuffledVersionOf "es ist mehr im Weg als es hilft" (snd (parseSingleLineStufflyFile "2017.08.22 es ist mehr im Weg als es hilft").Head) |> should be True
+
         fst (parseSingleLineStufflyFile "FSharp Language Overview [T. Petricek; -; -]").Head |> should equal "FSharp Language Overview [T. Petricek; -; -]"
+        isShuffledVersionOf "FSharp Language Overview [T. Petricek; -; -]" (snd (parseSingleLineStufflyFile "FSharp Language Overview [T. Petricek; -; -]").Head) |> should be True
+
         parseSingleLineStufflyFile "2017.08.22 fssnip.net #fsharp|F# snippets." |> should equal [("fssnip.net", "F# snippets.")]
+
         parseSingleLineStufflyFile "2017.07.14 monitorbacklinks.com/seo-tools/free-backlink-checker #seo #backlinks|Free Backlings Checker." |> should equal [("monitorbacklinks.com/seo-tools/free-backlink-checker", "Free Backlings Checker.")]
+
         parseSingleLineStufflyFile "2017.03.11 decksetapp.com #markdown #presentation #mac @visnja-zeljeznjak|Deckset." |> should equal [("decksetapp.com", "Deckset.")]
+
+    [<Test>]
+    // Covers https://github.com/ironcev/stuffly-to-gambit-converter/issues/1
+    // Shuffled front pages have leading space after the <<
+    member this.``parseStufflyFiles creates a shuffled right side that do not have leading space after the <<``() =
+        let rightSide = snd (parseSingleLineStufflyFile "this is some text").Head
+        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+        let rightSide = snd (parseSingleLineStufflyFile "2017.08.27 this is some text").Head
+        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
         

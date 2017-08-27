@@ -35,14 +35,20 @@ open System.Text.RegularExpressions
 let parseStufflyFile (stufflyFileName : string, stufflyFileContent) =
     let parseStufflyItem (item : string) =
 
-        let removeDate (leftPart, rightPart) =
-            (Regex.Replace(leftPart, @"^\d\d\d\d\.\d\d\.\d\d", ""), rightPart)
+        let removeDate =
+            let regex = new Regex(@"^\d\d\d\d\.\d\d\.\d\d")
+            let removeDateImplementation = fun (leftPart, rightPart) -> (regex.Replace(leftPart, ""), rightPart)
+            removeDateImplementation
 
-        let removeTags (leftPart, rightPart) =
-            (Regex.Replace(leftPart, "\s#[\w-]+", ""), rightPart)
+        let removeTags =
+            let regex = new Regex("\s#[\w-]+")
+            let removeTagsImplementation = fun (leftPart, rightPart) -> (regex.Replace(leftPart, ""), rightPart)
+            removeTagsImplementation
 
-        let removeSources (leftPart, rightPart) =
-            (Regex.Replace(leftPart, "\s@[\w-]+", ""), rightPart)
+        let removeSources =
+            let regex = new Regex("\s@[\w-]+")
+            let removeSourcesImplementation = fun (leftPart, rightPart) -> (regex.Replace(leftPart, ""), rightPart)
+            removeSourcesImplementation
 
         let trimParts (leftPart : string, rightPart : string) =
             (leftPart.Trim(), rightPart.Trim())
@@ -51,7 +57,7 @@ let parseStufflyFile (stufflyFileName : string, stufflyFileContent) =
             let shuffle =
                 let random = new Random()
 
-                let rec innerShuffle (text : string) =
+                let rec shuffleImplementation (text : string) =
                     let shuffledWords =
                         text.Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
                             |> Array.map (fun word -> (random.Next(), word))
@@ -62,9 +68,9 @@ let parseStufflyFile (stufflyFileName : string, stufflyFileContent) =
                         text // ... then we have to return that word.
                     else
                         let shuffledText = String.Join(" ", shuffledWords)
-                        if shuffledText <> text then shuffledText else innerShuffle text
+                        if shuffledText <> text then shuffledText else shuffleImplementation text
 
-                innerShuffle
+                shuffleImplementation
 
             match trimParts (leftPart, rightPart) with
                 | ("", "") -> (leftPart, rightPart)

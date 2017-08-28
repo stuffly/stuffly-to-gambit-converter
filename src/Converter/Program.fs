@@ -23,16 +23,16 @@ let getStufflyFilesWithin stufflyFolder =
     (new DirectoryInfo(stufflyFolder)).EnumerateFiles("*.txt", SearchOption.AllDirectories)
         |> Seq.map (fun file -> file.FullName)
 
-let readStufflyFile stufflyFilePath =
+let readStufflyFile filePath =
     (
-        Path.GetFileNameWithoutExtension(stufflyFilePath),
-        File.ReadAllLines(stufflyFilePath) |> Array.toList
+        Path.GetFileNameWithoutExtension(filePath),
+        File.ReadAllLines(filePath) |> Array.toList
     )
 
 open System
 open System.Text.RegularExpressions
 
-let parseStufflyFile (stufflyFileName : string, stufflyFileContent) =
+let parseStufflyFile (fileName : string, fileContent) =
     let parseStufflyItem (item : string) =
 
         let removeDate =
@@ -91,10 +91,10 @@ let parseStufflyFile (stufflyFileName : string, stufflyFileContent) =
             |> trimParts
 
     let parsedDocument =
-        stufflyFileContent
+        fileContent
             |> List.map (fun stufflyItem -> parseStufflyItem stufflyItem)
             |> List.where (fun parts -> parts <> ("", "") )
-    (stufflyFileName, parsedDocument)
+    (fileName, parsedDocument)
 
 
 open FSharp.Data.Sql

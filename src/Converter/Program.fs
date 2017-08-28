@@ -34,21 +34,17 @@ open System.Text.RegularExpressions
 
 let parseStufflyFile (fileName : string, fileContent) =
     let parseStufflyItem (item : string) =
+        
+        let replaceRegexMatchWithEmptyString regex =
+            let regex = new Regex(regex)
+            let replaceRegexMatchWithEmptyStringImplementation = fun (leftPart, rightPart) -> (regex.Replace(leftPart, ""), rightPart)
+            replaceRegexMatchWithEmptyStringImplementation
 
-        let removeDate =
-            let regex = new Regex(@"^\d\d\d\d\.\d\d\.\d\d")
-            let removeDateImplementation = fun (leftPart, rightPart) -> (regex.Replace(leftPart, ""), rightPart)
-            removeDateImplementation
+        let removeDate = replaceRegexMatchWithEmptyString @"^\d\d\d\d\.\d\d\.\d\d"
 
-        let removeTags =
-            let regex = new Regex("\s#[\w-]+")
-            let removeTagsImplementation = fun (leftPart, rightPart) -> (regex.Replace(leftPart, ""), rightPart)
-            removeTagsImplementation
+        let removeTags = replaceRegexMatchWithEmptyString "\s#[\w-]+"
 
-        let removeSources =
-            let regex = new Regex("\s@[\w-]+")
-            let removeSourcesImplementation = fun (leftPart, rightPart) -> (regex.Replace(leftPart, ""), rightPart)
-            removeSourcesImplementation
+        let removeSources = replaceRegexMatchWithEmptyString "\s@[\w-]+"
 
         let trimParts (leftPart : string, rightPart : string) =
             (leftPart.Trim(), rightPart.Trim())

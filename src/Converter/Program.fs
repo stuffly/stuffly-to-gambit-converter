@@ -92,7 +92,7 @@ let parseStufflyFile (fileName : string, fileContent) =
 
     let parsedDocument =
         fileContent
-            |> List.map (fun stufflyItem -> parseStufflyItem stufflyItem)
+            |> List.map parseStufflyItem
             |> List.where (fun parts -> parts <> ("", "") )
     (fileName, parsedDocument)
 
@@ -149,8 +149,7 @@ let main argv =
     
     let stufflyDocuments = 
         getStufflyFilesWithin stufflyFolder
-            |> Seq.map readStufflyFile
-            |> Seq.map parseStufflyFile
+            |> Seq.map (readStufflyFile >> parseStufflyFile)
             |> Seq.where (fun (documentName, documentContent) -> documentContent <> [])
 
     let outputDatabaseConnectionString = createOutputDatabaseWithin stufflyFolder
@@ -159,15 +158,15 @@ let main argv =
 
     let decks =
         stufflyDocuments
-            |> Seq.map (fun document -> createDeck database document)
+            |> Seq.map (createDeck database)
             |> Seq.toList // We need the list here in order not to reenumerate the sequence below when we create cards.
 
     // We have to save the decks so that they get the IDs updated before we create their cards.
     database.SubmitUpdates()
 
     decks
-        |> List.map (fun deck -> ((fst deck).Id, snd deck))
-        |> List.iter (fun deckIdAndParts -> createDeckCards database deckIdAndParts)
+        |> List.map (fun deck -> ((fst deck).Id, snd deck))        
+        |> List.iter (createDeckCards database)
 
     database.SubmitUpdates()
 

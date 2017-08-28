@@ -71,8 +71,7 @@ type ProgramTests() =
     [<Test>]
     member this.``parseStufflyFile creates the right part by shuffling the left part if the right part is not provided``() =
         let parsedDocument = parseSingleLineStufflyFile "this is some simple text"
-        let leftSide = fst parsedDocument.Head
-        let rightSide = snd parsedDocument.Head
+        let leftSide, rightSide = parsedDocument.Head        
         leftSide |> should equal "this is some simple text"
         rightSide |> should startWith "<<"
         rightSide |> should endWith ">>"
@@ -85,7 +84,7 @@ type ProgramTests() =
         let isShuffledVersionOf (original : string ) (shuffled : string) =
             let trimmedShuffled = shuffled.TrimStart('<').TrimEnd('>')
             original.Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
-                |> Array.forall (fun word -> trimmedShuffled.Contains(word))
+                |> Array.forall (trimmedShuffled.Contains)
 
         parseSingleLineStufflyFile "2015.09.18 -r Richtungswechsel,-|the change of direction" |> should equal [("-r Richtungswechsel,-", "the change of direction")]
 

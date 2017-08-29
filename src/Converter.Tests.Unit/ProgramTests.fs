@@ -101,11 +101,31 @@ type ProgramTests() =
         parseSingleLineStufflyFile "2017.03.11 decksetapp.com #markdown #presentation #mac @visnja-zeljeznjak|Deckset." |> should equal [("decksetapp.com", "Deckset.")]
 
     [<Test>]
-    // Covers https://github.com/ironcev/stuffly-to-gambit-converter/issues/1
+    // Covers:
+    //      https://github.com/ironcev/stuffly-to-gambit-converter/issues/1
+    //      https://github.com/ironcev/stuffly-to-gambit-converter/issues/2
     // Shuffled front pages have leading space after the <<
     member this.``parseStufflyFiles creates a shuffled right side that do not have leading space after the <<``() =
         let rightSide = snd (parseSingleLineStufflyFile "this is some text").Head
         rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+
+        let rightSide = snd (parseSingleLineStufflyFile " this is some text ").Head
+        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+
         let rightSide = snd (parseSingleLineStufflyFile "2017.08.27 this is some text").Head
         rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
-        
+
+        let rightSide = snd (parseSingleLineStufflyFile "2017.08.27 this is some text ").Head
+        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+
+        let rightSide = snd (parseSingleLineStufflyFile "2016.01.15 single_word").Head
+        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+
+        let rightSide = snd (parseSingleLineStufflyFile "2016.01.15 single_word ").Head
+        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+
+        let rightSide = snd (parseSingleLineStufflyFile "2016.01.15 single_word #some-tag").Head
+        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+
+        let rightSide = snd (parseSingleLineStufflyFile "2016.01.15 single_word #some-tag ").Head
+        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")

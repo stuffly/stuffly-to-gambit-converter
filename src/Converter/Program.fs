@@ -61,7 +61,10 @@ let parseStufflyFile (fileName : string, fileContent) =
                             |> Array.map (fun (index, word) -> word)
                     if shuffledWords.Length = 1 // If the left part has just a single word...
                     then
-                        text // ... then we have to return that word.
+                        shuffledWords.[0] // ... then we have to return that word.
+                        // We cannot return the original 'text' here because it could be that
+                        // it had leading or trailing spaces that are removed when the word was
+                        // split.
                     else
                         let shuffledText = String.Join(" ", shuffledWords)
                         if shuffledText <> text then shuffledText else shuffleImplementation text

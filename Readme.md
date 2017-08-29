@@ -30,7 +30,7 @@ Otherwise, run the converter out of its folder and provide the Stuffly Folder as
 The converter will create a file called *Output.db* that can be imported into the [Gambit Flashcards](https://play.google.com/store/apps/details?id=ru.ming13.gambit).
 
 ## Known Limitations
-Current version is 0.2.1 and thus very limited in functionality. Here are the main known limitations:
+Current version is 0.2.2 and thus very limited in functionality. Here are the main known limitations:
 
 - The Stuffly Folder must not contain two or more Stuffly Files with the same name.
 - All the Stuffly Files within the Stuffly Folder will be converted. It is not possible to convert specific Stuffly Files or to exclude certain files.

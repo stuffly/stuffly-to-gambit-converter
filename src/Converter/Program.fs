@@ -16,8 +16,7 @@ open System.IO
 let getStufflyFolder argv =
     match argv with
         | [] -> Directory.GetCurrentDirectory()
-        | [directory] -> directory
-        | _ -> argv.Item 0
+        | directory::_ -> directory
 
 let getStufflyFilesWithin stufflyFolder =
     (new DirectoryInfo(stufflyFolder)).EnumerateFiles("*.txt", SearchOption.AllDirectories)
@@ -26,7 +25,7 @@ let getStufflyFilesWithin stufflyFolder =
 let readStufflyFile filePath =
     (
         Path.GetFileNameWithoutExtension(filePath),
-        File.ReadAllLines(filePath) |> Array.toList
+        File.ReadAllLines(filePath) |> Seq.ofArray
     )
 
 open System
@@ -35,64 +34,73 @@ open System.Text.RegularExpressions
 let parseStufflyFile (fileName : string, fileContent) =
     let parseStufflyItem (item : string) =
         
-        let replaceRegexMatchWithEmptyString regex =
-            let regex = new Regex(regex)
-            let replaceRegexMatchWithEmptyStringImplementation = fun (leftPart, rightPart) -> (regex.Replace(leftPart, ""), rightPart)
-            replaceRegexMatchWithEmptyStringImplementation
-
-        let removeDate = replaceRegexMatchWithEmptyString @"^\d\d\d\d\.\d\d\.\d\d"
-
-        let removeTags = replaceRegexMatchWithEmptyString "\s#[\w-]+"
-
-        let removeSources = replaceRegexMatchWithEmptyString "\s@[\w-]+"
+        let removeDateTagsAndSources =
+            let regex = new Regex("^\d\d\d\d\.\d\d\.\d\d|\s#[\w-]+|\s@[\w-]+")
+            let removeDateTagsAndSourcesImplementation = fun (leftPart, rightPart) -> (regex.Replace(leftPart, ""), rightPart)
+            removeDateTagsAndSourcesImplementation
 
         let trimParts (leftPart : string, rightPart : string) =
             (leftPart.Trim(), rightPart.Trim())
 
         let createRightPartIfEmpty (leftPart, rightPart) =
-            let shuffle =
-                let random = new Random()
+            let shuffle (text : string) =
+                    let rec swapArrayElementsWithDifferentElementInPlace currentElementIndex (array : string[]) =
+                        let indexOfTheFirstDifferentElement = 
+                            match Array.tryFindIndex (fun element -> element <> array.[currentElementIndex]) array with
+                                | None -> currentElementIndex
+                                | Some(index) -> index
+                        if currentElementIndex <> indexOfTheFirstDifferentElement then
+                            let temp = array.[currentElementIndex]
+                            array.[currentElementIndex] <- array.[indexOfTheFirstDifferentElement]
+                            array.[indexOfTheFirstDifferentElement] <- temp
+    
+                        if currentElementIndex < array.Length - 1 then
+                            swapArrayElementsWithDifferentElementInPlace (currentElementIndex + 1) array
 
-                let rec shuffleImplementation (text : string) =
-                    let shuffledWords =
-                        text.Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
-                            |> Array.map (fun word -> (random.Next(), word))
-                            |> Array.sortBy (fun (index, word) -> index)
-                            |> Array.map (fun (index, word) -> word)
-                    if shuffledWords.Length = 1 // If the left part has just a single word...
-                    then
-                        shuffledWords.[0] // ... then we have to return that word.
-                        // We cannot return the original 'text' here because it could be that
-                        // it had leading or trailing spaces that are removed when the word was
-                        // split.
-                    else
-                        let shuffledText = String.Join(" ", shuffledWords)
-                        if shuffledText <> text then shuffledText else shuffleImplementation text
 
-                shuffleImplementation
+                    let splittedWords = text.Split([|' '|], StringSplitOptions.RemoveEmptyEntries)                    
+                    match splittedWords.Length with
+                        | 0 -> ""
+                        | 1 -> splittedWords.[0] // If the left part has just a single word...
+                            // ...then we have to return that word.
+                            // We cannot return the original 'text' here because it could be that
+                            // it had leading or trailing spaces that are removed when the word was
+                            // split.
+                        | 2 -> String.Concat(splittedWords.[1], " ", splittedWords.[0]) // Just swap the words.
+                        | _ -> 
+                            // Only if not all the words are same...
+                            if splittedWords |> Array.exists (fun element -> element <> splittedWords.[0])
+                            then  
+                                splittedWords |> (swapArrayElementsWithDifferentElementInPlace 0) //...  shuffle the array in place.
 
-            match trimParts (leftPart, rightPart) with
-                | ("", "") -> (leftPart, rightPart)
-                | (_, "") -> (leftPart, sprintf "<<%s>>" (shuffle leftPart))
-                | _ -> (leftPart, rightPart)
+                            String.Join(" ", splittedWords)
+
+            if String.IsNullOrWhiteSpace rightPart && not (String.IsNullOrWhiteSpace leftPart) then
+                (leftPart, sprintf "<<%s>>" (shuffle leftPart))
+            else
+                (leftPart, rightPart)
 
         let parts =
-            match (item.Split('|') |> Array.toList) with
-                | [] -> ("", "")
-                | [head] -> (head, "")
-                | head::tail -> (head, String.Join("|", tail))
+            let indexOfSeparator = item.IndexOf('|')
+            match indexOfSeparator with
+                | -1 -> (item, "")
+                | index ->
+                    (
+                        item.Substring(0, index), // This could be an empty string.
+                        // We can have a situation when the item contains only the separator "|"
+                        // or the separator is the last character ;-)
+                        if index = item.Length - 1  then "" else item.Substring(index + 1)
+                    ) 
 
         parts
-            |> removeDate
-            |> removeTags
-            |> removeSources
+            |> removeDateTagsAndSources
             |> createRightPartIfEmpty
             |> trimParts
 
     let parsedDocument =
         fileContent
-            |> List.map parseStufflyItem
-            |> List.where (fun parts -> parts <> ("", "") )
+            |> Seq.map parseStufflyItem
+            |> Seq.where (fun parts -> parts <> ("", "") )
     (fileName, parsedDocument)
 
 
@@ -139,7 +147,7 @@ let createDeckCards (database : GambitDatabase.dataContext) (deckId, parts) =
         newCard.OrderIndex <- index
         ()
 
-    parts |> List.iteri (fun index part -> createNewCard database index deckId part)
+    parts |> Seq.iteri (fun index part -> createNewCard database index deckId part)
 
 [<EntryPoint>]
 let main argv = 
@@ -149,7 +157,7 @@ let main argv =
     let stufflyDocuments = 
         getStufflyFilesWithin stufflyFolder
             |> Seq.map (readStufflyFile >> parseStufflyFile)
-            |> Seq.where (fun (documentName, documentContent) -> documentContent <> [])
+            |> Seq.where (fun (documentName, documentContent) -> not (Seq.isEmpty documentContent))
 
     let outputDatabaseConnectionString = createOutputDatabaseWithin stufflyFolder
 

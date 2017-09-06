@@ -7,8 +7,8 @@ open FsUnit
 
 [<TestFixture>]
 type ProgramTests() =
-    let parseSingleLineStufflyFile line =
-        let items = snd (parseStufflyFile ("", [line]))
+    let parseSingleLineStufflyFile (line : string)  =
+        let items = snd (parseStufflyFile ("", Seq.singleton line)) |> Seq.toList
         items.Length |> should be (lessThanOrEqualTo 1)
         items
 
@@ -39,6 +39,10 @@ type ProgramTests() =
     [<Test>]
     member this.``parseStufflyFile parses single line vertical line into empty document``() =
         parseSingleLineStufflyFile "|" |> should equal []
+
+    [<Test>]
+    member this.``parseStufflyFile parses single line ending with vertical line into left part with the text before the vertical line``() =
+        fst (parseSingleLineStufflyFile "some text before the|").Head |> should equal "some text before the"
 
     [<Test>]
     member this.``parseStufflyFile parses single line text into left part with that text``() =
@@ -78,6 +82,33 @@ type ProgramTests() =
         rightSide.TrimStart('<').TrimEnd('>') |> should not' (equal "this is some simple text") 
         "this is some simple text".Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
             |> Array.iter (fun word -> rightSide |> should haveSubstring word)
+
+    [<Test>]
+    member this.``parseStufflyFile creates the right part same as the single word left part if the right part is not provided``() =
+        let parsedDocument = parseSingleLineStufflyFile "this_is_a_single_word"
+        let leftSide, rightSide = parsedDocument.Head        
+        leftSide |> should equal "this_is_a_single_word"
+        rightSide |> should startWith "<<"
+        rightSide |> should endWith ">>"
+        rightSide.TrimStart('<').TrimEnd('>') |> should equal "this_is_a_single_word" 
+
+    [<Test>]
+    member this.``parseStufflyFile creates the right part same as the few same words on the left part if the right part is not provided``() =
+        let parsedDocument = parseSingleLineStufflyFile "same same same"
+        let leftSide, rightSide = parsedDocument.Head        
+        leftSide |> should equal "same same same"
+        rightSide |> should startWith "<<"
+        rightSide |> should endWith ">>"
+        rightSide.TrimStart('<').TrimEnd('>') |> should equal "same same same"
+
+    [<Test>]
+    member this.``parseStufflyFile creates the right part different then simmetric left part if the right part is not provided``() =
+        let parsedDocument = parseSingleLineStufflyFile "a b a"
+        let leftSide, rightSide = parsedDocument.Head        
+        leftSide |> should equal "a b a"
+        rightSide |> should startWith "<<"
+        rightSide |> should endWith ">>"
+        rightSide.TrimStart('<').TrimEnd('>') |> should not' (equal "a b a")
 
     [<Test>]
     member this.``parseStufflyFile properly parses common real-life examples``() =

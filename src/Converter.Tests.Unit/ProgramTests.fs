@@ -75,40 +75,40 @@ type ProgramTests() =
     [<Test>]
     member this.``parseStufflyFile creates the right part by shuffling the left part if the right part is not provided``() =
         let parsedDocument = parseSingleLineStufflyFile "this is some simple text"
-        let leftSide, rightSide = parsedDocument.Head        
-        leftSide |> should equal "this is some simple text"
-        rightSide |> should startWith "<<"
-        rightSide |> should endWith ">>"
-        rightSide.TrimStart('<').TrimEnd('>') |> should not' (equal "this is some simple text") 
+        let leftPart, rightPart = parsedDocument.Head        
+        leftPart |> should equal "this is some simple text"
+        rightPart |> should startWith "<<"
+        rightPart |> should endWith ">>"
+        rightPart.TrimStart('<').TrimEnd('>') |> should not' (equal "this is some simple text") 
         "this is some simple text".Split([|' '|], StringSplitOptions.RemoveEmptyEntries)
-            |> Array.iter (fun word -> rightSide |> should haveSubstring word)
+            |> Array.iter (fun word -> rightPart |> should haveSubstring word)
 
     [<Test>]
     member this.``parseStufflyFile creates the right part same as the single word left part if the right part is not provided``() =
         let parsedDocument = parseSingleLineStufflyFile "this_is_a_single_word"
-        let leftSide, rightSide = parsedDocument.Head        
-        leftSide |> should equal "this_is_a_single_word"
-        rightSide |> should startWith "<<"
-        rightSide |> should endWith ">>"
-        rightSide.TrimStart('<').TrimEnd('>') |> should equal "this_is_a_single_word" 
+        let leftPart, rightPart = parsedDocument.Head        
+        leftPart |> should equal "this_is_a_single_word"
+        rightPart |> should startWith "<<"
+        rightPart |> should endWith ">>"
+        rightPart.TrimStart('<').TrimEnd('>') |> should equal "this_is_a_single_word" 
 
     [<Test>]
     member this.``parseStufflyFile creates the right part same as the few same words on the left part if the right part is not provided``() =
         let parsedDocument = parseSingleLineStufflyFile "same same same"
-        let leftSide, rightSide = parsedDocument.Head        
-        leftSide |> should equal "same same same"
-        rightSide |> should startWith "<<"
-        rightSide |> should endWith ">>"
-        rightSide.TrimStart('<').TrimEnd('>') |> should equal "same same same"
+        let leftPart, rightPart = parsedDocument.Head        
+        leftPart |> should equal "same same same"
+        rightPart |> should startWith "<<"
+        rightPart |> should endWith ">>"
+        rightPart.TrimStart('<').TrimEnd('>') |> should equal "same same same"
 
     [<Test>]
     member this.``parseStufflyFile creates the right part different then simmetric left part if the right part is not provided``() =
         let parsedDocument = parseSingleLineStufflyFile "a b a"
-        let leftSide, rightSide = parsedDocument.Head        
-        leftSide |> should equal "a b a"
-        rightSide |> should startWith "<<"
-        rightSide |> should endWith ">>"
-        rightSide.TrimStart('<').TrimEnd('>') |> should not' (equal "a b a")
+        let leftPart, rightPart = parsedDocument.Head        
+        leftPart |> should equal "a b a"
+        rightPart |> should startWith "<<"
+        rightPart |> should endWith ">>"
+        rightPart.TrimStart('<').TrimEnd('>') |> should not' (equal "a b a")
 
     [<Test>]
     member this.``parseStufflyFile properly parses common real-life examples``() =
@@ -137,26 +137,26 @@ type ProgramTests() =
     //      https://github.com/ironcev/stuffly-to-gambit-converter/issues/2
     // Shuffled front pages have leading space after the <<
     member this.``parseStufflyFiles creates a shuffled right side that do not have leading space after the <<``() =
-        let rightSide = snd (parseSingleLineStufflyFile "this is some text").Head
-        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+        let rightPart = snd (parseSingleLineStufflyFile "this is some text").Head
+        rightPart.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
 
-        let rightSide = snd (parseSingleLineStufflyFile " this is some text ").Head
-        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+        let rightPart = snd (parseSingleLineStufflyFile " this is some text ").Head
+        rightPart.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
 
-        let rightSide = snd (parseSingleLineStufflyFile "2017.08.27 this is some text").Head
-        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+        let rightPart = snd (parseSingleLineStufflyFile "2017.08.27 this is some text").Head
+        rightPart.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
 
-        let rightSide = snd (parseSingleLineStufflyFile "2017.08.27 this is some text ").Head
-        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+        let rightPart = snd (parseSingleLineStufflyFile "2017.08.27 this is some text ").Head
+        rightPart.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
 
-        let rightSide = snd (parseSingleLineStufflyFile "2016.01.15 single_word").Head
-        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+        let rightPart = snd (parseSingleLineStufflyFile "2016.01.15 single_word").Head
+        rightPart.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
 
-        let rightSide = snd (parseSingleLineStufflyFile "2016.01.15 single_word ").Head
-        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+        let rightPart = snd (parseSingleLineStufflyFile "2016.01.15 single_word ").Head
+        rightPart.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
 
-        let rightSide = snd (parseSingleLineStufflyFile "2016.01.15 single_word #some-tag").Head
-        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+        let rightPart = snd (parseSingleLineStufflyFile "2016.01.15 single_word #some-tag").Head
+        rightPart.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
 
-        let rightSide = snd (parseSingleLineStufflyFile "2016.01.15 single_word #some-tag ").Head
-        rightSide.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")
+        let rightPart = snd (parseSingleLineStufflyFile "2016.01.15 single_word #some-tag ").Head
+        rightPart.TrimStart('<').TrimEnd('>') |> should not' (startWith " ")

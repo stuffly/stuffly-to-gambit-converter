@@ -38,4 +38,4 @@ The [latest version (0.2.2)](https://github.com/ironcev/stuffly-to-gambit-conver
 
 ## License
 
-*Stuffly to gambit Converter* is licensed under the [MIT license](LICENSE.txt).
+*Stuffly to gambit Converter* is licensed under the [MIT license](LICENSE).

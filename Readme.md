@@ -2,8 +2,10 @@
 
 Converts Stuffly Folders to [Gambit Flashcards](https://play.google.com/store/apps/details?id=ru.ming13.gambit) Decks and Cards.
 
-[![Build status](https://ci.appveyor.com/api/projects/status/etrgjgh3q5u3eqpy?svg=true)](https://ci.appveyor.com/project/ironcev/stuffly-to-gambit-converter)
-[![Test status](http://teststatusbadge.azurewebsites.net/api/status/ironcev/stuffly-to-gambit-converter)](https://ci.appveyor.com/project/ironcev/stuffly-to-gambit-converter)
+[![AppVeyor](https://img.shields.io/appveyor/ci/ironcev/stuffly-to-gambit-converter.svg)](https://ci.appveyor.com/project/ironcev/stuffly-to-gambit-converter)
+[![AppVeyor tests](https://img.shields.io/appveyor/tests/ironcev/stuffly-to-gambit-converter.svg)](https://ci.appveyor.com/project/ironcev/stuffly-to-gambit-converter/build/tests)
+[![GitHub release](https://img.shields.io/github/release/ironcev/stuffly-to-gambit-converter/all.svg)](https://github.com/ironcev/stuffly-to-gambit-converter/releases)
+[![License](https://img.shields.io/github/license/ironcev/stuffly-to-gambit-converter.svg)](https://github.com/ironcev/stuffly-to-gambit-converter/blob/master/LICENSE)
 
 ## About
 *Stuffly to Gambit Converter* convertes Stuffly Folders to an SQLite database compatible with [Gambit Flashcards](https://play.google.com/store/apps/details?id=ru.ming13.gambit) version 1.2.0.
